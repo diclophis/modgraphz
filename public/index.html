@@ -16,6 +16,11 @@
       <a href="speed_chase.mod"/>speed_chase</a>
       <a href="beat_it.mod"/>beat_it</a>
       <a href="ipanema.mod"/>ipanema</a>
+      <a href="careless_whisper.mod"/>careless_whisper</a>
+      <a href="tocatta.mod"/>tocatta</a>
+      <a href="sonata.mod"/>sonata</a>
+      <a href="monday.mod"/>monday</a>
+      <a href="hendrix.mod"/>hendrix</a>
     </div>
     <script type="text/javascript" src="modfile.js"></script>
     <script type="text/javascript" src="modplayer.js"></script>
@@ -37,7 +42,7 @@
         fft = new FFT(fbLength, rate);
 
         function write_samples (samples) {
-          var width = 10;
+          var width = 4;
           length = samples.length / channels;
           signal = samples;
           /*
@@ -52,19 +57,30 @@
           }
           */
           fft.forward(signal);
-          //context5.clearRect(0,0, fbLength, canvas5.height);
           context5.fillStyle = "#"+((1<<24)*Math.random()|0).toString(16); //"rgba(0, 0, 0, 0.01)";
-          for (i = 0; i < 200; i++ ) {
-            //console.log("rgba(" + Math.random() + ", 0, 0, 0.01)");
-            magnitude = fft.spectrum[i] * 2500;
+          context5.save();
+          context5.translate(-5, -2);
+          context5.globalAlpha = 0.01;
+          context5.drawImage(canvas5, 0, 0);
+          context5.restore();
+
+          for (i = 0; i < 512; i++ ) {
+            magnitude = fft.spectrum[i] * 3000;
+            if (magnitude > 375) {
+              magnitude = 375;
+            }
             context5.fillRect(i * width, canvas5.height, width+1, -magnitude);
           }
         }
 
         sink = Sink(function(buffer) {
           if (modPlayerSet) {
-            modPlayer.getSamples(buffer, buffer.length);
+            written = modPlayer.getSamples(buffer, buffer.length);
             write_samples(buffer);
+            console.log(written);
+            if (written == 0) {
+              play_mod(random_mod_href());
+            }
           }
         });
         
@@ -73,6 +89,7 @@
         function play_mod(href) {
           if (loading) {
           } else {
+            modPlayerSet = false;
             loading = true;
             fetch = new XMLHttpRequest();
             fetch.open('GET', 

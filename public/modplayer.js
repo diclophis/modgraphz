@@ -295,6 +295,6 @@ function ModPlayer(mod, rate) {
 			i += 2;
 		}
 		
-		return samples;
+		return i;
 	}
 }
