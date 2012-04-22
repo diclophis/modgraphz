@@ -15,11 +15,11 @@
       <a href="psimon_-_queen.mod"/>psimon_-_queen</a>
       <a href="speed_chase.mod"/>speed_chase</a>
       <a href="beat_it.mod"/>beat_it</a>
+      <a href="ipanema.mod"/>ipanema</a>
     </div>
     <script type="text/javascript" src="modfile.js"></script>
     <script type="text/javascript" src="modplayer.js"></script>
-    <script type="text/javascript" src="swfobject.js"></script>
-    <script type="text/javascript" src="dynamicaudio.js"></script>
+    <script type="text/javascript" src="sink.js"></script>
     <script type="text/javascript" src="fft.js"></script>
     <script type="text/javascript">
       document.addEventListener("DOMContentLoaded", function () {
@@ -37,17 +37,19 @@
         fbLength = 1024 * 4;
         rate     = 44100;
         fft = new FFT(fbLength / channels, rate);
-        audio_b = [];
+        audio_b = new Float32Array();
 
         width = 5;
 
         function write_samples (samples) {
           length = samples.length / channels;
+          console.log(length);
           signal = new Float32Array(length);
           for (i = 0; i < length; i++ ) {
             if (channels == 2) {
               // merge channels into a stereo-mix mono signal
               signal[i] = (samples[2*i] + samples[2*i+1]) / 2;
+              console.log(samples[i]);
             } else { // assume no more than 2 channels of data
               signal[i] = samples[i];
             }
@@ -69,7 +71,19 @@
         count = 0;
         now_a = last_a = now_v = last_v = new Date().getTime();
 
-        dynamicAudio = new DynamicAudio({'swf': 'dynamicaudio.swf'});
+        //dynamicAudio = new DynamicAudio({'swf': 'dynamicaudio.swf'});
+        sink = Sink(function(buffer) {
+          if (modPlayerSet) {
+            //sample_length = parseInt(rate * channels * ((dtt) / 1000));
+            //samples = (modPlayer.getSamples(sample_length));
+            modPlayer.getSamples(buffer, buffer.length);
+            audio_b = audio_b.concat(buffer);
+            is_audio_ready = true;
+          }
+        });
+        
+        //sink.ringBuffer = new Float32Array(fbLength);
+
 
         loading = false;
 
@@ -113,23 +127,27 @@
           return mods[Math.floor(Math.random() * mods.length)].href;
         };
         play_mod(random_mod_href());
-
+        /*
         (function pump_audio() {
           now_a = new Date().getTime();
           dtt = now_a - last_a;
           last_a = now_a;
-          if (modPlayerSet && ((typeof dynamicAudio.flashElementRef.write === "function") || dynamicAudio.audioElement)) {
-            sample_length = (rate * channels * ((dtt) / 1000));
+          if (modPlayerSet) {
+            sample_length = parseInt(rate * channels * ((dtt) / 1000));
             samples = (modPlayer.getSamples(sample_length));
-            dynamicAudio.write(samples);
+            //sink.writeMode = "sync";
+            //console.log(sink);
+            sink.writeBufferSync(samples);
+            //dynamicAudio.write(samples);
             audio_b = audio_b.concat(samples);
             is_audio_ready = true;
             if (samples.length == 0) {
               play_mod(random_mod_href());
             }
           }
-          window.setTimeout(pump_audio, 100);
+          window.setTimeout(pump_audio, 1000);
         })();
+        */
         (function render_and_vsync(timestamp) {
           if (timestamp) {
             now_v = timestamp;
@@ -140,6 +158,7 @@
             last_v = now_v;
 
             if (is_audio_ready) {
+              /*
               sl = (rate * channels * (dt / 1000))
               chumped = audio_b.splice(0, sl);
               fill = new Float32Array(fbLength);
@@ -147,7 +166,11 @@
                 fill[i] = chumped[i];
               }
               write_samples(fill);
+              */
+              write_samples(audio_b.splice(0, fbLength));
+              //console.log(sink.ringBuffer);
             }
+
           }
           (function vsync() {
             return window.requestAnimationFrame || 

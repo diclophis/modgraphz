@@ -249,8 +249,8 @@ function ModPlayer(mod, rate) {
 		}
 	}
 	
-	this.getSamples = function(sampleCount) {
-		samples = [];
+	this.getSamples = function(samples, sampleCount) {
+		//samples = new Float32Array(sampleCount); //[];
 		var i = 0;
 		while (i < sampleCount) {
 			ticksSinceStartOfFrame += ticksPerOutputSample;
