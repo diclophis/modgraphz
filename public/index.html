@@ -7,7 +7,7 @@
     </style>
   </head>
   <body>
-    <canvas id="canvas_spec" width="8192" height="400"></canvas>
+    <canvas id="canvas_spec" width="8192" height="500"></canvas>
     <div id="mods">
       <a href="phuture_sounds.mod"/>phuture_sounds</a>
       <a href="mindkick.mod"/>mindkick</a>
@@ -66,8 +66,8 @@
 
           for (i = 0; i < 512; i++ ) {
             magnitude = fft.spectrum[i] * 3000;
-            if (magnitude > 375) {
-              magnitude = 375;
+            if (magnitude > 475) {
+              magnitude = 475;
             }
             context5.fillRect(i * width, canvas5.height, width+1, -magnitude);
           }
@@ -76,10 +76,12 @@
         sink = Sink(function(buffer) {
           if (modPlayerSet) {
             written = modPlayer.getSamples(buffer, buffer.length);
-            write_samples(buffer);
-            console.log(written);
             if (written == 0) {
               play_mod(random_mod_href());
+              return 0;
+            } else {
+              write_samples(buffer.subarray(0, fbLength));
+              return written;
             }
           }
         });

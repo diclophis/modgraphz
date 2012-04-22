@@ -110,6 +110,7 @@ function ModPlayer(mod, rate) {
 	var currentPattern;
 	var currentPosition;
 	var currentRow;
+  var currentPatternNumber = 0;
 	
 	var channels = [];
 	for (var chan = 0; chan < mod.channelCount; chan++) {
@@ -199,7 +200,8 @@ function ModPlayer(mod, rate) {
 	
 	function loadPosition(positionNumber) {
 		currentPosition = positionNumber;
-		loadPattern(mod.positions[currentPosition]);
+    currentPatternNumber = mod.positions[currentPosition];
+		loadPattern(currentPatternNumber);
 	}
 	
 	loadPosition(0);
@@ -250,8 +252,12 @@ function ModPlayer(mod, rate) {
 	}
 	
 	this.getSamples = function(samples, sampleCount) {
-		//samples = new Float32Array(sampleCount); //[];
 		var i = 0;
+
+    if (currentPatternNumber == (mod.patterns.length - 1)) {
+      return 0;
+    }
+
 		while (i < sampleCount) {
 			ticksSinceStartOfFrame += ticksPerOutputSample;
 			while (ticksSinceStartOfFrame >= ticksPerFrame) {
