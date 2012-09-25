@@ -793,8 +793,11 @@ sinks('webaudio', function (readFn, channelCount, bufferSize, sampleRate) {
 		context		= sinks.webaudio.getContext(),
 		node		= null,
 		soundData	= null,
+    src = null,
 		zeroBuffer	= null;
 	self.start.apply(self, arguments);
+
+  src = context.createBufferSource();
 	node = context.createJavaScriptNode(self.bufferSize, self.channelCount, self.channelCount);
 
 	function bufferFill(e) {
@@ -827,11 +830,14 @@ sinks('webaudio', function (readFn, channelCount, bufferSize, sampleRate) {
 	self.sampleRate = context.sampleRate;
 
 	node.onaudioprocess = bufferFill;
+  src.noteOn(0);
+  src.connect(node);
 	node.connect(context.destination);
 
 	self._context		= context;
 	self._node		= node;
 	self._callback		= bufferFill;
+  self._src = src;
 	/* Keep references in order to avoid garbage collection removing the listeners, working around http://code.google.com/p/chromium/issues/detail?id=82795 */
 	// Thanks to @baffo32
 	fixChrome82795.push(node);

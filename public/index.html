@@ -38,16 +38,14 @@
               modPlayer = new ModPlayer(modFile, rate);
               modPlayerSet = true;
               loading = false;
+            }
+          }
+          fetch.send();
+        }
+      }
 
-        //var bufferSize = fbLength, sink = Sink();
-        //var proxy = sink.createProxy(bufferSize);
-        //proxy.on('audioprocess', function(buffer, channelCount) {
-        //var bufferSize = fbLength, sink = Sink();
-        //var proxy = sink.createProxy(bufferSize);
-        //proxy.on('audioprocess', function(buffer, channelCount) {
+      var foo = function(e) {
         var sink = Sink(function(buffer, channelCount) {
-          document.getElementById("debug").innerHTML += ("1");
-          /*
           if (modPlayerSet) {
             written = modPlayer.getSamples(buffer, buffer.length);
             if (written == 0) {
@@ -57,24 +55,26 @@
               return written;
             }
           }
-          */
         });
-
-            }
-          }
-          fetch.send();
-        }
-      }
+      };
 
       window.addEventListener("load", function () {
+        //var bufferSize = fbLength, sink = Sink();
+        //var proxy = sink.createProxy(bufferSize);
+        //proxy.on('audioprocess', function(buffer, channelCount) {
+        //var bufferSize = fbLength, sink = Sink();
+        //var proxy = sink.createProxy(bufferSize);
+        //proxy.on('audioprocess', function(buffer, channelCount) {
         function random_mod_href() {
           return mods[Math.floor(Math.random() * mods.length)].href;
         };
+
       });
     </script>
   </head>
   <body>
     <div id="debug"></div>
+    <div id="foo" onclick="foo();">foo</div>
     <div id="mods">
       <a href="phuture_sounds.mod"/>phuture_sounds</a>
       <a href="mindkick.mod"/>mindkick</a>
