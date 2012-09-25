@@ -36,29 +36,53 @@
         context5.strokeStyle = "#FFFFFF";
         context5.lineWidth = 2;
         context5.globalAlpha = 0.5;
-        window.setInterval(function(e) {
-          context5.fillStyle = "#" + ('00000' + (Math.random() * 16777216 << 0).toString(16)).substr(-6);
-        }, 33);
+        //window.setInterval(function(e) {
+        //  context5.fillStyle = "#" + ('00000' + (Math.random() * 16777216 << 0).toString(16)).substr(-6);
+        //}, 33);
 
-        channels = 2;
-        fbLength = 1024 * 8;
+        fbLength = 128;
         rate     = 44100;
         fft = new FFT(fbLength, rate);
 
         function write_samples (samples) {
-          var width = 4;
-          length = samples.length / channels;
-          signal = samples;
-          fft.forward(signal);
-          for (i = 0; i < 512; i++ ) {
+          var width = 10;
+          fft.forward(samples);
+          for (i = 0; i < (fbLength / 2); i++ ) {
             magnitude = fft.spectrum[i] * 3000;
             if (magnitude > 575) {
               magnitude = 575;
             }
+            var foo = fft.spectrum[i]; //magnitude / 575;
+            if (foo > 1.0 || foo < 0.0) {
+            console.log(foo);
+            }
+            //context5.fillStyle = //"#" + ('00000' + (foo * 16777216 << 0).toString(16)).substr(-6);
             context5.fillRect(i * width, canvas5.height, width+1, -magnitude);
           }
         }
 
+        var bufferSize = fbLength, sink = Sink();
+        var proxy = sink.createProxy(bufferSize);
+        proxy.on('audioprocess', function(buffer, channelCount) {
+          if (modPlayerSet) {
+            written = modPlayer.getSamples(buffer, buffer.length);
+            if (written == 0) {
+              play_mod(random_mod_href());
+              return 0;
+            } else {
+              var start = 0;
+              var sliced = buffer.subarray(0, fbLength);
+              while(sliced.length == fbLength) {
+                write_samples(sliced);
+                start += sliced.length;
+                sliced = buffer.subarray(start, fbLength);
+              }
+              return written;
+            }
+          }
+        });
+
+/*
         sink = Sink(function(buffer) {
           if (modPlayerSet) {
             written = modPlayer.getSamples(buffer, buffer.length);
@@ -77,7 +101,7 @@
             }
           }
         });
-        
+*/       
         loading = false;
 
         function play_mod(href) {
