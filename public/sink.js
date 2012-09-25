@@ -852,7 +852,7 @@ sinks('webaudio', function (readFn, channelCount, bufferSize, sampleRate) {
 			}
 		}
 
-		this._node = this._context = null;
+		this._src = this._node = this._context = null;
 		this.emit('kill');
 	},
 
