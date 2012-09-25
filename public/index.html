@@ -1,51 +1,34 @@
 <!doctype html>
 <html>
   <head>
-    <title>webgl</title>
-    <style type="text/css">
-      body { margin: 0; overflow: hidden; }
-    </style>
+    <title>webaudio</title>
     <script type="text/javascript" src="modfile.js"></script>
     <script type="text/javascript" src="modplayer.js"></script>
     <script type="text/javascript" src="sink.js"></script>
     <script type="text/javascript">
+
       var modPlayerSet = false;
-      var fbLength = 1024;
-      var rate     = 44100;
+      var modPlayer = null;
+      var rate = 44100;
       var loading = false;
-      //fft = new FFT(fbLength, rate);
-      function play_mod(href) {
-        if (loading) {
-        } else {
-          modPlayerSet = false;
-          loading = true;
-          fetch = new XMLHttpRequest();
-          fetch.open('GET', 
-            href
-          );
-          fetch.overrideMimeType("text/plain; charset=x-user-defined");
-          fetch.onreadystatechange = function() {
-            if (this.readyState == 4 && this.status == 200) {
-              t = this.responseText || "" ;
-              ff = [];
-              mx = t.length;
-              scc = String.fromCharCode;
-              for (z = 0; z < mx; z++) {
-                ff[z] = scc(t.charCodeAt(z) & 255);
-              }
-              binString = ff.join("");
-              modFile = new ModFile(binString);
-              modPlayer = new ModPlayer(modFile, rate);
-              modPlayerSet = true;
-              loading = false;
-            }
-          }
-          fetch.send();
-        }
+      var sink = null;
+
+      function random_mod_href() {
+        return mods[Math.floor(Math.random() * mods.length)].href;
       }
 
-      var foo = function(e) {
-        var sink = Sink(function(buffer, channelCount) {
+      function play_mod(href) {
+
+        if (loading) {
+          return;
+        }
+        modPlayerSet = false;
+
+        if (sink != null) {
+          sink.kill();
+        }
+
+        sink = Sink(function(buffer, channelCount) {
           if (modPlayerSet) {
             written = modPlayer.getSamples(buffer, buffer.length);
             if (written == 0) {
@@ -56,25 +39,32 @@
             }
           }
         });
-      };
 
-      window.addEventListener("load", function () {
-        //var bufferSize = fbLength, sink = Sink();
-        //var proxy = sink.createProxy(bufferSize);
-        //proxy.on('audioprocess', function(buffer, channelCount) {
-        //var bufferSize = fbLength, sink = Sink();
-        //var proxy = sink.createProxy(bufferSize);
-        //proxy.on('audioprocess', function(buffer, channelCount) {
-        function random_mod_href() {
-          return mods[Math.floor(Math.random() * mods.length)].href;
-        };
-
-      });
+        loading = true;
+        fetch = new XMLHttpRequest();
+        fetch.open('GET', href);
+        fetch.overrideMimeType("text/plain; charset=x-user-defined");
+        fetch.onreadystatechange = function() {
+          if (this.readyState == 4 && this.status == 200) {
+            var t = this.responseText || "";
+            var ff = [];
+            var mx = t.length;
+            var scc = String.fromCharCode;
+            for (z = 0; z < mx; z++) {
+              ff[z] = scc(t.charCodeAt(z) & 255);
+            }
+            var binString = ff.join("");
+            var modFile = new ModFile(binString);
+            modPlayer = new ModPlayer(modFile, rate);
+            modPlayerSet = true;
+            loading = false;
+          }
+        }
+        fetch.send();
+      }
     </script>
   </head>
   <body>
-    <div id="debug"></div>
-    <div id="foo" onclick="foo();">foo</div>
     <div id="mods">
       <a href="phuture_sounds.mod"/>phuture_sounds</a>
       <a href="mindkick.mod"/>mindkick</a>
@@ -93,11 +83,7 @@
         mods = document.getElementById("mods").getElementsByTagName("a");
         for (i=0; i<mods.length; i++) {
           mods[i].onclick = function () {
-            try {
-              play_mod(this.href);
-            } catch(e) {
-              alert(e);
-            }
+            play_mod(this.href);
             return false;
           };
         }

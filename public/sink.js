@@ -798,7 +798,10 @@ sinks('webaudio', function (readFn, channelCount, bufferSize, sampleRate) {
 	self.start.apply(self, arguments);
 
   src = context.createBufferSource();
+  src.noteOn(0);
+
 	node = context.createJavaScriptNode(self.bufferSize, self.channelCount, self.channelCount);
+  src.connect(node); // not strictly needed
 
 	function bufferFill(e) {
 		var	outputBuffer	= e.outputBuffer,
@@ -830,8 +833,6 @@ sinks('webaudio', function (readFn, channelCount, bufferSize, sampleRate) {
 	self.sampleRate = context.sampleRate;
 
 	node.onaudioprocess = bufferFill;
-  src.noteOn(0);
-  src.connect(node);
 	node.connect(context.destination);
 
 	self._context		= context;
