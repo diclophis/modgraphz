@@ -3,11 +3,78 @@
   <head>
     <title>webgl</title>
     <style type="text/css">
-      body { margin: 0; background-color: #000000; overflow: hidden; }
+      body { margin: 0; overflow: hidden; }
     </style>
+    <script type="text/javascript" src="modfile.js"></script>
+    <script type="text/javascript" src="modplayer.js"></script>
+    <script type="text/javascript" src="sink.js"></script>
+    <script type="text/javascript">
+      var modPlayerSet = false;
+      var fbLength = 1024;
+      var rate     = 44100;
+      var loading = false;
+      //fft = new FFT(fbLength, rate);
+      function play_mod(href) {
+        if (loading) {
+        } else {
+          modPlayerSet = false;
+          loading = true;
+          fetch = new XMLHttpRequest();
+          fetch.open('GET', 
+            href
+          );
+          fetch.overrideMimeType("text/plain; charset=x-user-defined");
+          fetch.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+              t = this.responseText || "" ;
+              ff = [];
+              mx = t.length;
+              scc = String.fromCharCode;
+              for (z = 0; z < mx; z++) {
+                ff[z] = scc(t.charCodeAt(z) & 255);
+              }
+              binString = ff.join("");
+              modFile = new ModFile(binString);
+              modPlayer = new ModPlayer(modFile, rate);
+              modPlayerSet = true;
+              loading = false;
+
+        //var bufferSize = fbLength, sink = Sink();
+        //var proxy = sink.createProxy(bufferSize);
+        //proxy.on('audioprocess', function(buffer, channelCount) {
+        //var bufferSize = fbLength, sink = Sink();
+        //var proxy = sink.createProxy(bufferSize);
+        //proxy.on('audioprocess', function(buffer, channelCount) {
+        var sink = Sink(function(buffer, channelCount) {
+          document.getElementById("debug").innerHTML += ("1");
+          /*
+          if (modPlayerSet) {
+            written = modPlayer.getSamples(buffer, buffer.length);
+            if (written == 0) {
+              play_mod(random_mod_href());
+              return 0;
+            } else {
+              return written;
+            }
+          }
+          */
+        });
+
+            }
+          }
+          fetch.send();
+        }
+      }
+
+      window.addEventListener("load", function () {
+        function random_mod_href() {
+          return mods[Math.floor(Math.random() * mods.length)].href;
+        };
+      });
+    </script>
   </head>
   <body>
-    <canvas id="canvas_spec" width="8192" height="600"></canvas>
+    <div id="debug"></div>
     <div id="mods">
       <a href="phuture_sounds.mod"/>phuture_sounds</a>
       <a href="mindkick.mod"/>mindkick</a>
@@ -22,130 +89,18 @@
       <a href="monday.mod"/>monday</a>
       <a href="hendrix.mod"/>hendrix</a>
     </div>
-    <script type="text/javascript" src="modfile.js"></script>
-    <script type="text/javascript" src="modplayer.js"></script>
-    <script type="text/javascript" src="sink.js"></script>
-    <script type="text/javascript" src="fft.js"></script>
     <script type="text/javascript">
-      document.addEventListener("DOMContentLoaded", function () {
-
-        modPlayerSet = false;
-
-        canvas5 = document.getElementById("canvas_spec");
-        context5 = canvas5.getContext('2d');
-        context5.strokeStyle = "#FFFFFF";
-        context5.lineWidth = 2;
-        context5.globalAlpha = 0.5;
-        //window.setInterval(function(e) {
-        //  context5.fillStyle = "#" + ('00000' + (Math.random() * 16777216 << 0).toString(16)).substr(-6);
-        //}, 33);
-
-        fbLength = 128;
-        rate     = 44100;
-        fft = new FFT(fbLength, rate);
-
-        function write_samples (samples) {
-          var width = 10;
-          fft.forward(samples);
-          for (i = 0; i < (fbLength / 2); i++ ) {
-            magnitude = fft.spectrum[i] * 3000;
-            if (magnitude > 575) {
-              magnitude = 575;
-            }
-            var foo = fft.spectrum[i]; //magnitude / 575;
-            if (foo > 1.0 || foo < 0.0) {
-            console.log(foo);
-            }
-            //context5.fillStyle = //"#" + ('00000' + (foo * 16777216 << 0).toString(16)).substr(-6);
-            context5.fillRect(i * width, canvas5.height, width+1, -magnitude);
-          }
-        }
-
-        var bufferSize = fbLength, sink = Sink();
-        var proxy = sink.createProxy(bufferSize);
-        proxy.on('audioprocess', function(buffer, channelCount) {
-          if (modPlayerSet) {
-            written = modPlayer.getSamples(buffer, buffer.length);
-            if (written == 0) {
-              play_mod(random_mod_href());
-              return 0;
-            } else {
-              var start = 0;
-              var sliced = buffer.subarray(0, fbLength);
-              while(sliced.length == fbLength) {
-                write_samples(sliced);
-                start += sliced.length;
-                sliced = buffer.subarray(start, fbLength);
-              }
-              return written;
-            }
-          }
-        });
-
-/*
-        sink = Sink(function(buffer) {
-          if (modPlayerSet) {
-            written = modPlayer.getSamples(buffer, buffer.length);
-            if (written == 0) {
-              play_mod(random_mod_href());
-              return 0;
-            } else {
-              var start = 0;
-              var sliced = buffer.subarray(0, fbLength);
-              while(sliced.length == fbLength) {
-                write_samples(sliced);
-                start += sliced.length;
-                sliced = buffer.subarray(start, fbLength);
-              }
-              return written;
-            }
-          }
-        });
-*/       
-        loading = false;
-
-        function play_mod(href) {
-          if (loading) {
-          } else {
-            modPlayerSet = false;
-            loading = true;
-            fetch = new XMLHttpRequest();
-            fetch.open('GET', 
-              href
-            );
-            fetch.overrideMimeType("text/plain; charset=x-user-defined");
-            fetch.onreadystatechange = function() {
-              if (this.readyState == 4 && this.status == 200) {
-                t = this.responseText || "" ;
-                ff = [];
-                mx = t.length;
-                scc = String.fromCharCode;
-                for (z = 0; z < mx; z++) {
-                  ff[z] = scc(t.charCodeAt(z) & 255);
-                }
-                binString = ff.join("");
-                modFile = new ModFile(binString);
-                modPlayer = new ModPlayer(modFile, rate);
-                modPlayerSet = true;
-                loading = false;
-                context5.clearRect(0,0, fbLength, canvas5.height);
-              }
-            }
-            fetch.send();
-          }
-        }
         mods = document.getElementById("mods").getElementsByTagName("a");
         for (i=0; i<mods.length; i++) {
           mods[i].onclick = function () {
-            play_mod(this.href);
+            try {
+              play_mod(this.href);
+            } catch(e) {
+              alert(e);
+            }
             return false;
           };
         }
-        function random_mod_href() {
-          return mods[Math.floor(Math.random() * mods.length)].href;
-        };
-        play_mod(random_mod_href());
-      });
     </script>
   </body>
 </html>
