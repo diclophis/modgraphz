@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>webaudio</title>
+    <title>modgraphz</title>
     <script type="text/javascript" src="modfile.js"></script>
     <script type="text/javascript" src="modplayer.js"></script>
     <script type="text/javascript" src="sink.js"></script>
@@ -30,6 +30,7 @@
 
         sink = Sink(function(buffer, channelCount) {
           if (modPlayerSet) {
+          console.log(typeof window.parent.animate);
             written = modPlayer.getSamples(buffer, buffer.length);
             if (written == 0) {
               play_mod(random_mod_href());
