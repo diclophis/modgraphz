@@ -2,44 +2,94 @@
 <html>
   <head>
     <title>modgraphz</title>
+    <style type="text/css">
+      canvas { margin-top: 1em; }
+      div { margin-top: 1em; }
+    </style>
     <script type="text/javascript" src="modfile.js"></script>
     <script type="text/javascript" src="modplayer.js"></script>
     <script type="text/javascript" src="sink.js"></script>
+    <script type="text/javascript" src="fft.js"></script>
+  </head>
+  <body>
+    <div id="mods">
+      <a href="phuture_sounds.mod">phuture_sounds</a>
+      <a href="mindkick.mod">mindkick</a>
+      <a href="cyberm00n.mod">cyberm00n</a>
+      <a href="psimon_-_queen.mod">psimon_-_queen</a>
+      <a href="speed_chase.mod">speed_chase</a>
+      <a href="beat_it.mod">beat_it</a>
+      <a href="ipanema.mod">ipanema</a>
+      <a href="careless_whisper.mod">careless_whisper</a>
+      <a href="tocatta.mod">tocatta</a>
+      <a href="sonata.mod">sonata</a>
+      <a href="monday.mod">monday</a>
+      <a href="hendrix.mod">hendrix</a>
+    </div>
+    <canvas id="canvas_spec" style="width: 100%" width="4096" height="640"></canvas>
     <script type="text/javascript">
-
       var modPlayerSet = false;
       var modPlayer = null;
       var rate = 44100;
       var loading = false;
       var sink = null;
 
+      var canvas5 = document.getElementById("canvas_spec");
+      var context5 = canvas5.getContext('2d');
+      context5.strokeStyle = "#FFFFFF";
+      context5.lineWidth = 2;
+      context5.globalAlpha = 0.5;
+
+      var fbLength = 4096;
+      var rate     = 44100;
+      var fft = new FFT(fbLength, rate);
+
+      function write_samples (samples) {
+        var width = (canvas5.width / fbLength) * 2.0;
+        fft.forward(samples);
+        for (i = 0; i < (fbLength); i++ ) {
+          magnitude = (fft.spectrum[i] * 44100.0);
+          context5.fillRect(i * (width), canvas5.height, (width), -magnitude);
+        }
+      }
+
       function random_mod_href() {
         return mods[Math.floor(Math.random() * mods.length)].href;
       }
 
-      function play_mod(href) {
-
-        if (loading) {
-          return;
-        }
-        modPlayerSet = false;
-
-        if (sink != null) {
-          sink.kill();
-        }
-
         sink = Sink(function(buffer, channelCount) {
           if (modPlayerSet) {
-          console.log(typeof window.parent.animate);
             written = modPlayer.getSamples(buffer, buffer.length);
             if (written == 0) {
               play_mod(random_mod_href());
               return 0;
             } else {
+              var start = 0;
+              var sliced = buffer.subarray(0, fbLength);
+              context5.clearRect(0,0, canvas5.width, canvas5.height);
+              while(sliced.length == fbLength) {
+                write_samples(sliced); // this does the drawing
+                start += sliced.length;
+                sliced = buffer.subarray(start, fbLength);
+              }
               return written;
             }
           }
         });
+
+      var started = false;
+
+      function play_mod(href) {
+        if (loading) {
+          return;
+        }
+
+        modPlayerSet = false;
+
+        if (!started) {
+          sink.startPlaying();
+          started = true;
+        }
 
         loading = true;
         fetch = new XMLHttpRequest();
@@ -63,31 +113,14 @@
         }
         fetch.send();
       }
-    </script>
-  </head>
-  <body>
-    <div id="mods">
-      <a href="phuture_sounds.mod">phuture_sounds</a>
-      <a href="mindkick.mod">mindkick</a>
-      <a href="cyberm00n.mod">cyberm00n</a>
-      <a href="psimon_-_queen.mod">psimon_-_queen</a>
-      <a href="speed_chase.mod">speed_chase</a>
-      <a href="beat_it.mod">beat_it</a>
-      <a href="ipanema.mod">ipanema</a>
-      <a href="careless_whisper.mod">careless_whisper</a>
-      <a href="tocatta.mod">tocatta</a>
-      <a href="sonata.mod">sonata</a>
-      <a href="monday.mod">monday</a>
-      <a href="hendrix.mod">hendrix</a>
-    </div>
-    <script type="text/javascript">
-        mods = document.getElementById("mods").getElementsByTagName("a");
-        for (i=0; i<mods.length; i++) {
-          mods[i].onclick = function () {
-            play_mod(this.href);
-            return false;
-          };
-        }
+
+      var mods = document.getElementById("mods").getElementsByTagName("a");
+      for (i=0; i<mods.length; i++) {
+        mods[i].onclick = function () {
+          play_mod(this.href);
+          return false;
+        };
+      }
     </script>
   </body>
 </html>

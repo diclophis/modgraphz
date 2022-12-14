@@ -809,8 +809,6 @@ sinks('webaudio', function (readFn, channelCount, bufferSize, sampleRate) {
 	self.start.apply(self, arguments);
 
 	src = context.createBufferSource();
-  src.start(0);
-
 	node = context.createScriptProcessor(self.bufferSize, self.channelCount, self.channelCount);
 	src.connect(node); // not strictly needed
 
@@ -855,6 +853,7 @@ sinks('webaudio', function (readFn, channelCount, bufferSize, sampleRate) {
 	fixChrome82795.push(node);
 }, {
 	kill: function () {
+    this._src.stop();
 		this._node.disconnect(0);
 
 		for (var i=0; i<fixChrome82795.length; i++) {
@@ -866,6 +865,10 @@ sinks('webaudio', function (readFn, channelCount, bufferSize, sampleRate) {
 		this._src = this._node = this._context = null;
 		this.emit('kill');
 	},
+
+  startPlaying: function() {
+    this._src.start(0);
+  },
 
 	getPlaybackTime: function () {
 		return this._context.currentTime * this.sampleRate;
