@@ -28,7 +28,9 @@ function Sink (readFn, channelCount, bufferSize, sampleRate) {
 		if (sinks[i].enabled) {
 			try {
 				return new sinks[i](readFn, channelCount, bufferSize, sampleRate);
-			} catch(e1){}
+			} catch(e1) {
+        console.log(e1);
+      }
 		}
 	}
 
@@ -558,228 +560,237 @@ Sink.inlineWorker = inlineWorker;
 inlineWorker.test();
 
 }(this.Sink);
-void function (Sink) {
 
-/**
- * A Sink class for the Mozilla Audio Data API.
-*/
+//void function (Sink) {
+//
+///**
+// * A Sink class for the Mozilla Audio Data API.
+//*/
+//
+//Sink.sinks('audiodata', function () {
+//	var	self			= this,
+//		currentWritePosition	= 0,
+//		tail			= null,
+//		audioDevice		= new Audio(),
+//		written, currentPosition, available, soundData, prevPos,
+//		timer; // Fix for https://bugzilla.mozilla.org/show_bug.cgi?id=630117
+//	self.start.apply(self, arguments);
+//	self.preBufferSize = isNaN(arguments[4]) || arguments[4] === null ? this.preBufferSize : arguments[4];
+//
+//	function bufferFill() {
+//		if (tail) {
+//			written = audioDevice.mozWriteAudio(tail);
+//			currentWritePosition += written;
+//			if (written < tail.length){
+//				tail = tail.subarray(written);
+//				return tail;
+//			}
+//			tail = null;
+//		}
+//
+//		currentPosition = audioDevice.mozCurrentSampleOffset();
+//		available = Number(currentPosition + (prevPos !== currentPosition ? self.bufferSize : self.preBufferSize) * self.channelCount - currentWritePosition);
+//
+//		if (currentPosition === prevPos) {
+//			self.emit('error', [Sink.Error(0x10)]);
+//		}
+//
+//		if (available > 0 || prevPos === currentPosition){
+//			self.ready();
+//
+//			try {
+//				soundData = new Float32Array(prevPos === currentPosition ? self.preBufferSize * self.channelCount :
+//					self.forceBufferSize ? available < self.bufferSize * 2 ? self.bufferSize * 2 : available : available);
+//			} catch(e) {
+//				self.emit('error', [Sink.Error(0x12)]);
+//				self.kill();
+//				return;
+//			}
+//			self.process(soundData, self.channelCount);
+//			written = self._audio.mozWriteAudio(soundData);
+//			if (written < soundData.length){
+//				tail = soundData.subarray(written);
+//			}
+//			currentWritePosition += written;
+//		}
+//		prevPos = currentPosition;
+//	}
+//
+//	audioDevice.mozSetup(self.channelCount, self.sampleRate);
+//
+//	this._timers = [];
+//
+//	this._timers.push(Sink.doInterval(function () {
+//		// Check for complete death of the output
+//		if (+new Date() - self.previousHit > 2000) {
+//			self._audio = audioDevice = new Audio();
+//			audioDevice.mozSetup(self.channelCount, self.sampleRate);
+//			currentWritePosition = 0;
+//			self.emit('error', [Sink.Error(0x11)]);
+//		}
+//	}, 1000));
+//
+//	this._timers.push(Sink.doInterval(bufferFill, self.interval));
+//
+//	self._bufferFill	= bufferFill;
+//	self._audio		= audioDevice;
+//}, {
+//	// These are somewhat safe values...
+//	bufferSize: 24576,
+//	preBufferSize: 24576,
+//	forceBufferSize: false,
+//	interval: 100,
+//
+//	kill: function () {
+//		while (this._timers.length) {
+//			this._timers.shift()();
+//		}
+//
+//		this.emit('kill');
+//	},
+//
+//	getPlaybackTime: function () {
+//		return this._audio.mozCurrentSampleOffset() / this.channelCount;
+//	}
+//}, false, true);
+//
+//Sink.sinks.moz = Sink.sinks.audiodata;
+//
+//}(this.Sink);
 
-Sink.sinks('audiodata', function () {
-	var	self			= this,
-		currentWritePosition	= 0,
-		tail			= null,
-		audioDevice		= new Audio(),
-		written, currentPosition, available, soundData, prevPos,
-		timer; // Fix for https://bugzilla.mozilla.org/show_bug.cgi?id=630117
-	self.start.apply(self, arguments);
-	self.preBufferSize = isNaN(arguments[4]) || arguments[4] === null ? this.preBufferSize : arguments[4];
 
-	function bufferFill() {
-		if (tail) {
-			written = audioDevice.mozWriteAudio(tail);
-			currentWritePosition += written;
-			if (written < tail.length){
-				tail = tail.subarray(written);
-				return tail;
-			}
-			tail = null;
-		}
 
-		currentPosition = audioDevice.mozCurrentSampleOffset();
-		available = Number(currentPosition + (prevPos !== currentPosition ? self.bufferSize : self.preBufferSize) * self.channelCount - currentWritePosition);
+//void function (Sink) {
+//
+///**
+// * A dummy Sink. (No output)
+//*/
+//
+//Sink.sinks('dummy', function () {
+//	var	self = this;
+//	self.start.apply(self, arguments);
+//	
+//	function bufferFill () {
+//		var	soundData = new Float32Array(self.bufferSize * self.channelCount);
+//		self.process(soundData, self.channelCount);
+//	}
+//
+//	self._kill = Sink.doInterval(bufferFill, self.bufferSize / self.sampleRate * 1000);
+//
+//	self._callback		= bufferFill;
+//}, {
+//	kill: function () {
+//		this._kill();
+//		this.emit('kill');
+//	}
+//}, true);
+//
+//}(this.Sink);
 
-		if (currentPosition === prevPos) {
-			self.emit('error', [Sink.Error(0x10)]);
-		}
 
-		if (available > 0 || prevPos === currentPosition){
-			self.ready();
 
-			try {
-				soundData = new Float32Array(prevPos === currentPosition ? self.preBufferSize * self.channelCount :
-					self.forceBufferSize ? available < self.bufferSize * 2 ? self.bufferSize * 2 : available : available);
-			} catch(e) {
-				self.emit('error', [Sink.Error(0x12)]);
-				self.kill();
-				return;
-			}
-			self.process(soundData, self.channelCount);
-			written = self._audio.mozWriteAudio(soundData);
-			if (written < soundData.length){
-				tail = soundData.subarray(written);
-			}
-			currentWritePosition += written;
-		}
-		prevPos = currentPosition;
-	}
 
-	audioDevice.mozSetup(self.channelCount, self.sampleRate);
+//(function (Sink, sinks) {
+//
+//sinks = Sink.sinks;
+//
+//function newAudio (src) {
+//	var audio = document.createElement('audio');
+//	if (src) {
+//		audio.src = src;
+//	}
+//	return audio;
+//}
+//
+///* TODO: Implement a <BGSOUND> hack for IE8. */
+//
+///**
+// * A sink class for WAV data URLs
+// * Relies on pcmdata.js and utils to be present.
+// * Thanks to grantgalitz and others for the idea.
+//*/
+//sinks('wav', function () {
+//	var	self			= this,
+//		audio			= new sinks.wav.wavAudio(),
+//		PCMData			= typeof PCMData === 'undefined' ? audioLib.PCMData : PCMData;
+//	self.start.apply(self, arguments);
+//	var	soundData		= new Float32Array(self.bufferSize * self.channelCount),
+//		zeroData		= new Float32Array(self.bufferSize * self.channelCount);
+//
+//	if (!newAudio().canPlayType('audio/wav; codecs=1') || !btoa) throw 0;
+//	
+//	function bufferFill () {
+//		if (self._audio.hasNextFrame) return;
+//
+//		self.ready();
+//
+//		Sink.memcpy(zeroData, 0, soundData, 0);
+//		self.process(soundData, self.channelCount);
+//
+//		self._audio.setSource('data:audio/wav;base64,' + btoa(
+//			audioLib.PCMData.encode({
+//				data:		soundData,
+//				sampleRate:	self.sampleRate,
+//				channelCount:	self.channelCount,
+//				bytesPerSample:	self.quality
+//			})
+//		));
+//
+//		if (!self._audio.currentFrame.src) self._audio.nextClip();
+//	}
+//	
+//	self.kill		= Sink.doInterval(bufferFill, 40);
+//	self._bufferFill	= bufferFill;
+//	self._audio		= audio;
+//}, {
+//	quality: 1,
+//	bufferSize: 22050,
+//
+//	getPlaybackTime: function () {
+//		var audio = this._audio;
+//		return (audio.currentFrame ? audio.currentFrame.currentTime * this.sampleRate : 0) + audio.samples;
+//	}
+//});
+//
+//function wavAudio () {
+//	var self = this;
+//
+//	self.currentFrame	= newAudio();
+//	self.nextFrame		= newAudio();
+//
+//	self._onended		= function () {
+//		self.samples += self.bufferSize;
+//		self.nextClip();
+//	};
+//}
+//
+//wavAudio.prototype = {
+//	samples:	0,
+//	nextFrame:	null,
+//	currentFrame:	null,
+//	_onended:	null,
+//	hasNextFrame:	false,
+//
+//	nextClip: function () {
+//		var	curFrame	= this.currentFrame;
+//		this.currentFrame	= this.nextFrame;
+//		this.nextFrame		= curFrame;
+//		this.hasNextFrame	= false;
+//		this.currentFrame.play();
+//	},
+//
+//	setSource: function (src) {
+//		this.nextFrame.src = src;
+//		this.nextFrame.addEventListener('ended', this._onended, true);
+//
+//		this.hasNextFrame = true;
+//	}
+//};
+//
+//sinks.wav.wavAudio = wavAudio;
+//
+//}(this.Sink));
 
-	this._timers = [];
-
-	this._timers.push(Sink.doInterval(function () {
-		// Check for complete death of the output
-		if (+new Date() - self.previousHit > 2000) {
-			self._audio = audioDevice = new Audio();
-			audioDevice.mozSetup(self.channelCount, self.sampleRate);
-			currentWritePosition = 0;
-			self.emit('error', [Sink.Error(0x11)]);
-		}
-	}, 1000));
-
-	this._timers.push(Sink.doInterval(bufferFill, self.interval));
-
-	self._bufferFill	= bufferFill;
-	self._audio		= audioDevice;
-}, {
-	// These are somewhat safe values...
-	bufferSize: 24576,
-	preBufferSize: 24576,
-	forceBufferSize: false,
-	interval: 100,
-
-	kill: function () {
-		while (this._timers.length) {
-			this._timers.shift()();
-		}
-
-		this.emit('kill');
-	},
-
-	getPlaybackTime: function () {
-		return this._audio.mozCurrentSampleOffset() / this.channelCount;
-	}
-}, false, true);
-
-Sink.sinks.moz = Sink.sinks.audiodata;
-
-}(this.Sink);
-void function (Sink) {
-
-/**
- * A dummy Sink. (No output)
-*/
-
-Sink.sinks('dummy', function () {
-	var	self = this;
-	self.start.apply(self, arguments);
-	
-	function bufferFill () {
-		var	soundData = new Float32Array(self.bufferSize * self.channelCount);
-		self.process(soundData, self.channelCount);
-	}
-
-	self._kill = Sink.doInterval(bufferFill, self.bufferSize / self.sampleRate * 1000);
-
-	self._callback		= bufferFill;
-}, {
-	kill: function () {
-		this._kill();
-		this.emit('kill');
-	}
-}, true);
-
-}(this.Sink);
-(function (Sink, sinks) {
-
-sinks = Sink.sinks;
-
-function newAudio (src) {
-	var audio = document.createElement('audio');
-	if (src) {
-		audio.src = src;
-	}
-	return audio;
-}
-
-/* TODO: Implement a <BGSOUND> hack for IE8. */
-
-/**
- * A sink class for WAV data URLs
- * Relies on pcmdata.js and utils to be present.
- * Thanks to grantgalitz and others for the idea.
-*/
-sinks('wav', function () {
-	var	self			= this,
-		audio			= new sinks.wav.wavAudio(),
-		PCMData			= typeof PCMData === 'undefined' ? audioLib.PCMData : PCMData;
-	self.start.apply(self, arguments);
-	var	soundData		= new Float32Array(self.bufferSize * self.channelCount),
-		zeroData		= new Float32Array(self.bufferSize * self.channelCount);
-
-	if (!newAudio().canPlayType('audio/wav; codecs=1') || !btoa) throw 0;
-	
-	function bufferFill () {
-		if (self._audio.hasNextFrame) return;
-
-		self.ready();
-
-		Sink.memcpy(zeroData, 0, soundData, 0);
-		self.process(soundData, self.channelCount);
-
-		self._audio.setSource('data:audio/wav;base64,' + btoa(
-			audioLib.PCMData.encode({
-				data:		soundData,
-				sampleRate:	self.sampleRate,
-				channelCount:	self.channelCount,
-				bytesPerSample:	self.quality
-			})
-		));
-
-		if (!self._audio.currentFrame.src) self._audio.nextClip();
-	}
-	
-	self.kill		= Sink.doInterval(bufferFill, 40);
-	self._bufferFill	= bufferFill;
-	self._audio		= audio;
-}, {
-	quality: 1,
-	bufferSize: 22050,
-
-	getPlaybackTime: function () {
-		var audio = this._audio;
-		return (audio.currentFrame ? audio.currentFrame.currentTime * this.sampleRate : 0) + audio.samples;
-	}
-});
-
-function wavAudio () {
-	var self = this;
-
-	self.currentFrame	= newAudio();
-	self.nextFrame		= newAudio();
-
-	self._onended		= function () {
-		self.samples += self.bufferSize;
-		self.nextClip();
-	};
-}
-
-wavAudio.prototype = {
-	samples:	0,
-	nextFrame:	null,
-	currentFrame:	null,
-	_onended:	null,
-	hasNextFrame:	false,
-
-	nextClip: function () {
-		var	curFrame	= this.currentFrame;
-		this.currentFrame	= this.nextFrame;
-		this.nextFrame		= curFrame;
-		this.hasNextFrame	= false;
-		this.currentFrame.play();
-	},
-
-	setSource: function (src) {
-		this.nextFrame.src = src;
-		this.nextFrame.addEventListener('ended', this._onended, true);
-
-		this.hasNextFrame = true;
-	}
-};
-
-sinks.wav.wavAudio = wavAudio;
-
-}(this.Sink));
 (function (sinks, fixChrome82795) {
 
 var AudioContext = typeof window === 'undefined' ? null : window.webkitAudioContext || window.AudioContext;
@@ -798,9 +809,9 @@ sinks('webaudio', function (readFn, channelCount, bufferSize, sampleRate) {
 	self.start.apply(self, arguments);
 
 	src = context.createBufferSource();
-	src.noteOn(0);
+  src.start(0);
 
-	node = context.createJavaScriptNode(self.bufferSize, self.channelCount, self.channelCount);
+	node = context.createScriptProcessor(self.bufferSize, self.channelCount, self.channelCount);
 	src.connect(node); // not strictly needed
 
 	function bufferFill(e) {
@@ -877,112 +888,115 @@ sinks.webaudio.getContext = function () {
 };
 
 }(this.Sink.sinks, []));
-(function (Sink) {
 
-/**
- * A Sink class for the Media Streams Processing API and/or Web Audio API in a Web Worker.
-*/
 
-Sink.sinks('worker', function () {
-	var	self		= this,
-		global		= (function(){ return this; }()),
-		soundData	= null,
-		outBuffer	= null,
-		zeroBuffer	= null;
-	self.start.apply(self, arguments);
+//(function (Sink) {
+//
+///**
+// * A Sink class for the Media Streams Processing API and/or Web Audio API in a Web Worker.
+//*/
+//
+//Sink.sinks('worker', function () {
+//	var	self		= this,
+//		global		= (function(){ return this; }()),
+//		soundData	= null,
+//		outBuffer	= null,
+//		zeroBuffer	= null;
+//	self.start.apply(self, arguments);
+//
+//	// Let's see if we're in a worker.
+//
+//	importScripts();
+//
+//	function mspBufferFill (e) {
+//		if (!self.isReady) {
+//			self.initMSP(e);
+//		}
+//
+//		self.ready();
+//
+//		var	channelCount	= self.channelCount,
+//			l		= e.audioLength,
+//			n, i;
+//
+//		soundData	= soundData && soundData.length === l * channelCount ? soundData : new Float32Array(l * channelCount);
+//		outBuffer	= outBuffer && outBuffer.length === soundData.length ? outBuffer : new Float32Array(l * channelCount);
+//		zeroBuffer	= zeroBuffer && zeroBuffer.length === soundData.length ? zeroBuffer : new Float32Array(l * channelCount);
+//
+//		soundData.set(zeroBuffer);
+//		outBuffer.set(zeroBuffer);
+//
+//		self.process(soundData, self.channelCount);
+//
+//		for (n=0; n<channelCount; n++) {
+//			for (i=0; i<l; i++) {
+//				outBuffer[n * e.audioLength + i] = soundData[n + i * channelCount];
+//			}
+//		}
+//
+//		e.writeAudio(outBuffer);
+//	}
+//
+//	function waBufferFill(e) {
+//		if (!self.isReady) {
+//			self.initWA(e);
+//		}
+//
+//		self.ready();
+//
+//		var	outputBuffer	= e.outputBuffer,
+//			channelCount	= outputBuffer.numberOfChannels,
+//			i, n, l		= outputBuffer.length,
+//			size		= outputBuffer.size,
+//			channels	= new Array(channelCount),
+//			tail;
+//		
+//		soundData	= soundData && soundData.length === l * channelCount ? soundData : new Float32Array(l * channelCount);
+//		zeroBuffer	= zeroBuffer && zeroBuffer.length === soundData.length ? zeroBuffer : new Float32Array(l * channelCount);
+//		soundData.set(zeroBuffer);
+//
+//		for (i=0; i<channelCount; i++) {
+//			channels[i] = outputBuffer.getChannelData(i);
+//		}
+//
+//		self.process(soundData, self.channelCount);
+//
+//		for (i=0; i<l; i++) {
+//			for (n=0; n < channelCount; n++) {
+//				channels[n][i] = soundData[i * self.channelCount + n];
+//			}
+//		}
+//	}
+//
+//	global.onprocessmedia	= mspBufferFill;
+//	global.onaudioprocess	= waBufferFill;
+//
+//	self._mspBufferFill	= mspBufferFill;
+//	self._waBufferFill	= waBufferFill;
+//
+//}, {
+//	ready: false,
+//
+//	initMSP: function (e) {
+//		this.channelCount	= e.audioChannels;
+//		this.sampleRate		= e.audioSampleRate;
+//		this.bufferSize		= e.audioLength * this.channelCount;
+//		this.ready		= true;
+//		this.emit('ready', []);
+//	},
+//
+//	initWA: function (e) {
+//		var b = e.outputBuffer;
+//		this.channelCount	= b.numberOfChannels;
+//		this.sampleRate		= b.sampleRate;
+//		this.bufferSize		= b.length * this.channelCount;
+//		this.ready		= true;
+//		this.emit('ready', []);
+//	}
+//});
+//
+//}(this.Sink));
 
-	// Let's see if we're in a worker.
-
-	importScripts();
-
-	function mspBufferFill (e) {
-		if (!self.isReady) {
-			self.initMSP(e);
-		}
-
-		self.ready();
-
-		var	channelCount	= self.channelCount,
-			l		= e.audioLength,
-			n, i;
-
-		soundData	= soundData && soundData.length === l * channelCount ? soundData : new Float32Array(l * channelCount);
-		outBuffer	= outBuffer && outBuffer.length === soundData.length ? outBuffer : new Float32Array(l * channelCount);
-		zeroBuffer	= zeroBuffer && zeroBuffer.length === soundData.length ? zeroBuffer : new Float32Array(l * channelCount);
-
-		soundData.set(zeroBuffer);
-		outBuffer.set(zeroBuffer);
-
-		self.process(soundData, self.channelCount);
-
-		for (n=0; n<channelCount; n++) {
-			for (i=0; i<l; i++) {
-				outBuffer[n * e.audioLength + i] = soundData[n + i * channelCount];
-			}
-		}
-
-		e.writeAudio(outBuffer);
-	}
-
-	function waBufferFill(e) {
-		if (!self.isReady) {
-			self.initWA(e);
-		}
-
-		self.ready();
-
-		var	outputBuffer	= e.outputBuffer,
-			channelCount	= outputBuffer.numberOfChannels,
-			i, n, l		= outputBuffer.length,
-			size		= outputBuffer.size,
-			channels	= new Array(channelCount),
-			tail;
-		
-		soundData	= soundData && soundData.length === l * channelCount ? soundData : new Float32Array(l * channelCount);
-		zeroBuffer	= zeroBuffer && zeroBuffer.length === soundData.length ? zeroBuffer : new Float32Array(l * channelCount);
-		soundData.set(zeroBuffer);
-
-		for (i=0; i<channelCount; i++) {
-			channels[i] = outputBuffer.getChannelData(i);
-		}
-
-		self.process(soundData, self.channelCount);
-
-		for (i=0; i<l; i++) {
-			for (n=0; n < channelCount; n++) {
-				channels[n][i] = soundData[i * self.channelCount + n];
-			}
-		}
-	}
-
-	global.onprocessmedia	= mspBufferFill;
-	global.onaudioprocess	= waBufferFill;
-
-	self._mspBufferFill	= mspBufferFill;
-	self._waBufferFill	= waBufferFill;
-
-}, {
-	ready: false,
-
-	initMSP: function (e) {
-		this.channelCount	= e.audioChannels;
-		this.sampleRate		= e.audioSampleRate;
-		this.bufferSize		= e.audioLength * this.channelCount;
-		this.ready		= true;
-		this.emit('ready', []);
-	},
-
-	initWA: function (e) {
-		var b = e.outputBuffer;
-		this.channelCount	= b.numberOfChannels;
-		this.sampleRate		= b.sampleRate;
-		this.bufferSize		= b.length * this.channelCount;
-		this.ready		= true;
-		this.emit('ready', []);
-	}
-});
-
-}(this.Sink));
 (function (Sink) {
 
 /**
