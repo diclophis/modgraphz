@@ -1,0 +1,11 @@
+#
+
+Wkndr.server_side("main") { |gl, server|
+  server.live("/", "modgraphz.bardin.haus") do |cn, phr, mab|
+    mab.div(:id => "main") do
+      mab.a(:href => "index.html") do
+        "index.html"
+      end
+    end
+  end
+}

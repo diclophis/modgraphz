@@ -1,0 +1,63 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: modgraphz
+  labels:
+    app: modgraphz
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: modgraphz
+  template:
+    metadata:
+      labels:
+        app: modgraphz
+    spec:
+      volumes: []
+      containers:
+      - name: main
+        image: modgraphz:latest
+        imagePullPolicy: IfNotPresent
+        command: ["/var/lib/wkndr/release/wkndr.mruby", "--server=/var/lib/wkndr/public", "--no-client"]
+        #command: ["sleep", "infinity"]
+        ports:
+        - containerPort: 8000
+        resources:
+          limits:
+            memory: 100M
+            cpu: 50m
+          requests:
+            memory: 100M
+            cpu: 10m
+        volumeMounts: []
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: modgraphz-service
+spec:
+  type: NodePort
+  selector:
+    app: modgraphz
+  ports:
+  - protocol: TCP
+    name: app
+    port: 8000
+    nodePort: 32576
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: modgraphz-vhost
+  annotations:
+    ingress.class: wkndr
+spec:
+  rules:
+  - host: modgraphz.bardin.haus
+    http:
+      paths:
+      - backend:
+          serviceName: modgraphz-service
+          servicePort: 8000
