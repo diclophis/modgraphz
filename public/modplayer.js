@@ -98,11 +98,13 @@ function ModPlayer(mod, rate) {
 	var ticksPerOutputSample = Math.round(ticksPerSecond / rate);
 	var ticksSinceStartOfFrame = 0;
 	
-	this.setBpm = function(bpm) {
+	var setBpm = function(bpm) {
 		/* x beats per minute => x*4 rows per minute */
 		ticksPerFrame = Math.round(ticksPerSecond * 2.5/bpm);
-	}
-	this.setBpm(125);
+	};
+
+	//setBpm(125);
+	setBpm(130);
 	
 	/* initial player state */
 	var framesPerRow = 6;
@@ -205,14 +207,32 @@ function ModPlayer(mod, rate) {
 	}
 	
 	loadPosition(0);
-	
-	function getNextPosition() {
+
+  function peakNextPosition() {
 		if (currentPosition + 1 == mod.positionCount) {
-			loadPosition(mod.positionLoopPoint);
+			return (mod.positionLoopPoint);
 		} else {
-			loadPosition(currentPosition + 1);
+			return (currentPosition + 1);
 		}
-	}
+  };
+
+  this.peakNextPositionP = function() {
+    return peakNextPosition();
+  };
+
+  this.peakCurrentRowP = function() {
+    return currentRow;
+  };
+
+	function getNextPosition() {
+    loadPosition(peakNextPosition());
+
+		//if (currentPosition + 1 == mod.positionCount) {
+		//	loadPosition(mod.positionLoopPoint);
+		//} else {
+		//	loadPosition(currentPosition + 1);
+		//}
+	};
 	
 	function getNextRow() {
 		if (currentRow == 63) {
@@ -250,6 +270,14 @@ function ModPlayer(mod, rate) {
 			getNextRow();
 		}
 	}
+
+  this.peakChannelCount = function() {
+	  return mod.channelCount;
+  }
+
+  this.peakCurrentPattern = function() {
+    return currentPattern;
+  };
 	
 	this.getSamples = function(samples, sampleCount) {
 		var i = 0;

@@ -2,6 +2,7 @@ function ModFile(mod) {
 	function trimNulls(str) {
 		return str.replace(/\x00+$/, '');
 	}
+
 	function getWord(str, pos) {
 		return (str.charCodeAt(pos) << 8) + str.charCodeAt(pos+1)
 	}
@@ -41,9 +42,9 @@ function ModFile(mod) {
 			this.patternCount = this.positions[i]+1;
 		}
 	}
-	
+
 	var identifier = mod.substr(1080, 4);
-	
+
 	var channelCountByIdentifier = {
 		'TDZ1': 1, '1CHN': 1, 'TDZ2': 2, '2CHN': 2, 'TDZ3': 3, '3CHN': 3,
 		'M.K.': 4, 'FLT4': 4, 'M!K!': 4, '4CHN': 4, 'TDZ4': 4, '5CHN': 5, 'TDZ5': 5,
@@ -59,7 +60,7 @@ function ModFile(mod) {
 		//console.log("Warning: unknown identifier " + identifier + ". Assuming 4 channels.");
 		this.channelCount = 4;
 	}
-	
+
 	var patternOffset = 1084;
 	for (var pat = 0; pat < this.patternCount; pat++) {
 		this.patterns[pat] = [];
@@ -80,7 +81,7 @@ function ModFile(mod) {
 			}
 		}
 	}
-	
+
 	var sampleOffset = patternOffset;
 	for (var s = 0; s < this.sampleCount; s++) {
 		this.samples[s].startOffset = sampleOffset;

@@ -27,6 +27,12 @@
       <a href="monday.mod">monday</a>
       <a href="hendrix.mod">hendrix</a>
     </div>
+    <div id="position">
+    </div>
+    <div id="row">
+    </div>
+    <div id="notes">
+    </div>
     <canvas id="canvas_spec" style="width: 100%" width="4096" height="640"></canvas>
     <script type="text/javascript">
       var modPlayerSet = false;
@@ -34,6 +40,10 @@
       var rate = 44100;
       var loading = false;
       var sink = null;
+
+      var positionDiv = document.getElementById("position");
+      var rowDiv = document.getElementById("row");
+      var notesDiv = document.getElementById("notes");
 
       var canvas5 = document.getElementById("canvas_spec");
       var context5 = canvas5.getContext('2d');
@@ -58,20 +68,34 @@
         return mods[Math.floor(Math.random() * mods.length)].href;
       }
 
-        sink = Sink(function(buffer, channelCount) {
+        sink = Sink(function(samples, channelCount) {
           if (modPlayerSet) {
-            written = modPlayer.getSamples(buffer, buffer.length);
+            var currentRow = modPlayer.peakCurrentRowP();
+
+            positionDiv.innerText = modPlayer.peakNextPositionP();
+            rowDiv.innerText = currentRow;
+            notesDiv.innerText = '';
+
+            var currentPattern = modPlayer.peakCurrentPattern();
+            var maxChan = modPlayer.peakChannelCount();
+
+		        for (var chan = 0; chan < maxChan; chan++) {
+			        var note = currentPattern[currentRow][chan];
+              notesDiv.innerText += note.sample + '=';
+            }
+
+            written = modPlayer.getSamples(samples, samples.length);
             if (written == 0) {
               play_mod(random_mod_href());
               return 0;
             } else {
               var start = 0;
-              var sliced = buffer.subarray(0, fbLength);
+              var sliced = samples.subarray(0, fbLength);
               context5.clearRect(0,0, canvas5.width, canvas5.height);
               while(sliced.length == fbLength) {
                 write_samples(sliced); // this does the drawing
                 start += sliced.length;
-                sliced = buffer.subarray(start, fbLength);
+                sliced = samples.subarray(start, fbLength);
               }
               return written;
             }
